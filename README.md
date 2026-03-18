@@ -14,7 +14,7 @@
 ### 方式一：pipx 安装（推荐，全局可用）
 
 ```bash
-pipx install git+https://github.com/SallyAlbarn/WebArticles-to-Markdown
+pipx install git+https://github.com/polaris-lo/WebArticles-to-Markdown
 ```
 
 安装后直接运行：
@@ -44,7 +44,7 @@ python -m playwright install firefox
 ### 方式二：源码安装（开发 / 调试用）
 
 ```bash
-git clone https://github.com/SallyAlbarn/WebArticles-to-Markdown
+git clone https://github.com/polaris-lo/WebArticles-to-Markdown
 cd WebArticles-to-Markdown
 pip3 install -e .                   # 安装核心依赖
 cp config.example.yaml config.yaml  # 按需修改配置
