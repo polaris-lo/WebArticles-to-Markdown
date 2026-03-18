@@ -1,0 +1,18 @@
+# 核心依赖（必需）
+httpx>=0.27
+beautifulsoup4>=4.12
+lxml>=5.0
+markdownify>=0.12
+ruamel.yaml>=0.18
+python-dateutil>=2.9
+
+# 可选依赖（按平台需求安装，见 README）
+# 微信公众号（强烈推荐）：pip install wechat-article-to-markdown
+# Twitter/X：          Jina Reader / Nitter 作为降级方案，无需额外安装
+# 小红书 Playwright：   pip install playwright && playwright install firefox
+# 小红书 OCR（二选一）：
+#   推荐（纯 Python，中文效果好）：pip install easyocr
+#   轻量备选（需系统安装 Tesseract + chi_sim 语言包）：pip install pytesseract pillow
+# LLM 内容重排版（二选一）：
+#   DeepSeek（默认，需设置 DEEPSEEK_API_KEY）：pip install openai
+#   Claude（需设置 ANTHROPIC_API_KEY）：          pip install anthropic
