@@ -1,8 +1,13 @@
 # WebArticles-to-Markdown
 
-将微信公众号、小红书、微博、Twitter/X、Reddit 等平台的文章/内容转换为结构化 Markdown 文件，支持 YAML frontmatter，本地运行。
+将微信公众号、小红书、微博、Twitter/X、Reddit 等平台的文章/内容转换为结构化 Markdown 文件，支持 YAML frontmatter，本地运行，适配 Obsidian。
 
-参考 [Agent-Reach](https://github.com/Panniantong/Agent-Reach) 的理念：**每个平台用最匹配的专用工具**。
+参考 [Agent-Reach](https://github.com/Panniantong/Agent-Reach) 的理念：**每个平台用最匹配的专用工具**。在此基础上扩展了以下能力：
+
+- 📷 **图片 OCR**：自动提取小红书/微博帖子中图片的文字（支持中英文，easyocr 或 pytesseract）
+- 🤖 **LLM 后处理**：可选接入 DeepSeek / Claude，自动重排版、去广告、生成中文摘要
+- 📱 **快捷指令友好**：工具为纯 CLI，可通过 Apple Shortcuts 的「运行 Shell 脚本」动作一键触发
+- 🔄 **多层降级策略**：每个平台均设有备用方案，遇到反爬或登录墙自动切换
 
 ## 安装
 
@@ -44,7 +49,7 @@ python3 convert.py https://mp.weixin.qq.com/s/xxx -o ~/notes/clippings
 ## 平台支持详情
 
 | 平台 | 主要方案 | 降级方案 | 是否需要 Cookie |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | 微信公众号 | `wechat-article-to-markdown`（camoufox） | HTTP + BeautifulSoup | 否 |
 | 微博 | HTTP + `$render_data` JSON | Jina Reader | 否（公开帖） |
 | Reddit | JSON API + Cookie | Jina Reader | 需要（2023年后） |
@@ -102,7 +107,7 @@ python3 convert.py https://www.xiaohongshu.com/explore/abc --cookies cookies/xia
 
 ## 完整参数
 
-```
+```text
 python3 convert.py <URL> [选项]
 
 选项:
@@ -143,6 +148,46 @@ status: unread
 ---
 
 # 正文内容...
+```
+
+## OCR 图片文字提取
+
+小红书和微博帖子中的图片可自动 OCR 提取文字，支持中英文。
+
+```bash
+# 推荐（纯 Python，支持中文，首次运行会下载约 1GB 模型）
+pip3 install easyocr
+
+# 轻量替代（需要系统安装 Tesseract + chi_sim 语言包）
+pip3 install pytesseract pillow
+```
+
+在 `config.yaml` 中启用：
+
+```yaml
+platforms:
+  xiaohongshu:
+    ocr:
+      enabled: true
+      engine: auto    # auto | easyocr | pytesseract
+```
+
+## LLM 后处理（可选）
+
+接入 DeepSeek 或 Claude，自动完成：重排版（分段、去广告、补标题）+ 生成中文摘要。
+
+```bash
+# 设置 API Key（二选一）
+export DEEPSEEK_API_KEY=sk-...
+export ANTHROPIC_API_KEY=sk-ant-...
+```
+
+在 `config.yaml` 中启用：
+
+```yaml
+llm:
+  enabled: true
+  provider: deepseek    # deepseek | claude
 ```
 
 ## Obsidian Dataview 查询
