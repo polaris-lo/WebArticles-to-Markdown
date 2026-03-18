@@ -1,0 +1,44 @@
+# Web Articles to Markdown - 配置文件示例
+# 复制为 config.yaml 并按需修改
+
+# 默认输出目录（相对路径基于项目根目录，或使用绝对路径）
+# 推荐填写你的 Obsidian Vault 路径，例如：
+# output_dir: "~/Documents/MyVault/Clippings"
+output_dir: "./output"
+
+# 图片处理
+images:
+  download: true          # 是否下载图片到本地（推荐 true，CDN 链接有时效）
+  subdir: "assets"        # 图片保存子目录名
+
+# 评论设置
+comments:
+  include: true           # 是否包含评论（目前仅 Reddit 支持）
+  max_top_level: 3        # 最多包含几条顶层评论
+
+# Jina Reader 兜底
+jina:
+  enabled: true           # 是否启用 Jina Reader 作为兜底
+  timeout: 30             # 请求超时（秒）
+
+# LLM 后处理（可选，需要配置 API Key）
+# DeepSeek API key 优先级：DEEPSEEK_API_KEY 环境变量 > ~/.config/webarticles/deepseek_api_key 文件
+# Claude API key：ANTHROPIC_API_KEY 环境变量
+llm:
+  enabled: false          # 改为 true 开启 LLM 重排版/摘要
+  provider: deepseek      # deepseek（默认）| claude
+  model:                  # 留空使用默认：deepseek-chat / claude-haiku-4-5-20251001
+
+# 各平台 Cookie 配置
+platforms:
+  xiaohongshu:
+    cookies_file: "cookies/xiaohongshu.txt"
+    ocr:
+      enabled: true         # 是否对图片进行 OCR 识别（需安装 easyocr 或 pytesseract）
+      engine: auto          # auto | easyocr | pytesseract
+  twitter:
+    cookies_file: "cookies/twitter.txt"
+    nitter_instances:     # Nitter 镜像列表（Twitter 不需要 Cookie 的替代方案）
+      - "nitter.net"
+      - "nitter.privacydev.net"
+      - "nitter.poast.org"
