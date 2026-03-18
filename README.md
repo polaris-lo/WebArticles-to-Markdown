@@ -223,6 +223,53 @@ llm:
   provider: deepseek    # deepseek | claude
 ```
 
+## Apple Shortcuts 快捷指令（macOS）
+
+在 Safari / 其他 App 分享 URL 时，一键转换并存入 Obsidian。
+
+### 配置步骤
+
+打开「快捷指令」App，新建快捷指令，依次添加以下动作：
+
+#### 动作 1：从「快速操作」接收输入
+
+- 接收：App 和其他（URL / 文本均可）
+- 如果没有输入：继续
+
+#### 动作 2：运行 Shell 脚本
+
+- Shell：`zsh`
+- 传入输入内容：给 `stdin`
+
+脚本内容（按安装方式二选一）：
+
+```bash
+# ── 方式一：pipx 安装 ──────────────────────────────────────────
+URL=$(cat | tr -d '\n\r')
+OUTPUT=$(~/.local/bin/webarticles "$URL" 2>&1)
+echo "$OUTPUT" | grep "已保存:" | sed 's/.*已保存: //' | xargs basename
+```
+
+```bash
+# ── 方式二：源码 + venv 安装 ──────────────────────────────────
+PROJECT=~/path/to/WebArticles-to-Markdown   # ← 改为你的项目路径
+URL=$(cat | tr -d '\n\r')
+OUTPUT=$($PROJECT/.venv/bin/python3 $PROJECT/convert.py "$URL" 2>&1)
+echo "$OUTPUT" | grep "已保存:" | sed 's/.*已保存: //' | xargs basename
+```
+
+> **提示**：快捷指令的 Shell 环境不加载 `.zshrc`，所以 pipx 版需要写全路径 `~/.local/bin/webarticles`，而不能直接写 `webarticles`。
+
+#### 动作 3：显示通知
+
+- 内容：Shell 脚本结果（显示保存的文件名）
+
+#### 动作 4（可选）：打开 Obsidian
+
+### 使用方式
+
+在任意 App 点击分享 → 选择「保存文章为 MD」快捷指令，稍等片刻即可收到通知并自动跳转 Obsidian。
+
 ## Obsidian Dataview 查询
 
 ```dataview
