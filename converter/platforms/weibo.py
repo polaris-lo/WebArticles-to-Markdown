@@ -8,7 +8,6 @@ from bs4 import BeautifulSoup
 from converter.platforms.base import BasePlatform, ExtractionError
 from converter.utils import http
 from converter.utils.date_parser import parse_date
-from converter.utils.ocr import ocr_available, ocr_image
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +15,7 @@ logger = logging.getLogger(__name__)
 class WeiboPlatform(BasePlatform):
     name = "weibo"
 
-    def extract(self, url: str, config: dict, cookies: dict) -> dict:
+    def extract(self, url: str, _config: dict, cookies: dict) -> dict:
         mobile_url = self._to_mobile_url(url)
         logger.debug("Weibo mobile URL: %s", mobile_url)
 
@@ -35,7 +34,7 @@ class WeiboPlatform(BasePlatform):
         post_data = self._extract_render_data(resp.text)
 
         if post_data:
-            return self._parse_from_json(post_data, url, config)
+            return self._parse_from_json(post_data, url)
 
         # Fallback: parse HTML directly (less reliable)
         return self._parse_from_html(resp.text, url)
@@ -119,82 +118,10 @@ class WeiboPlatform(BasePlatform):
             "categories": [f"@{author}"] if author else [],
             "summary": summary,
             "extra": {k: v for k, v in extra.items() if v is not None},
+            "body_html": text_html,
         }
 
-        # Image OCR: extract article images and OCR them
-        image_urls = self._extract_image_urls(post)
-        ocr_cfg = (config or {}).get("platforms", {}).get("weibo", {}).get("ocr", {})
-        do_ocr = ocr_cfg.get("enabled", True) and image_urls and ocr_available(
-            ocr_cfg.get("engine", "auto")
-        )
-
-        if do_ocr:
-            llm_cfg = (config or {}).get("llm") or {}
-            body_md = self._build_body_with_ocr(
-                plain_text, image_urls, ocr_cfg.get("engine", "auto"), llm_cfg
-            )
-            base["body_md"] = body_md
-        else:
-            base["body_html"] = text_html
-
         return base
-
-    def _extract_image_urls(self, post: dict) -> list[str]:
-        """Extract image URLs from Weibo post JSON (pics array)."""
-        urls = []
-        for pic in post.get("pics") or []:
-            large = pic.get("large") or {}
-            url = large.get("url") or pic.get("url", "")
-            if url:
-                urls.append(url)
-        return urls
-
-    def _build_body_with_ocr(
-        self, caption: str, image_urls: list[str], engine: str, llm_cfg: dict | None = None
-    ) -> str:
-        """Combine Chinese caption with OCR'd image text (typically English article)."""
-        from converter.utils.llm import cleanup_ocr_with_llm
-
-        lines: list[str] = []
-
-        if caption.strip():
-            lines.append("## 博主译文\n")
-            lines.append(caption.strip())
-            lines.append("")
-
-        ocr_sections: list[str] = []
-        for idx, img_url in enumerate(image_urls, start=1):
-            try:
-                resp = http.get(img_url, timeout=20, bypass_proxy=True)
-                ocr_text = ocr_image(resp.content, engine=engine)
-            except Exception as exc:
-                logger.debug("图片 %d OCR 失败: %s", idx, exc)
-                ocr_text = None
-            if ocr_text and ocr_text.strip():
-                ocr_sections.append(ocr_text.strip())
-
-        if not ocr_sections:
-            return "\n".join(lines)
-
-        raw_ocr = "\n\n".join(ocr_sections)
-
-        cfg = llm_cfg or {}
-        if cfg.get("enabled", True):
-            cleaned = cleanup_ocr_with_llm(
-                raw_ocr,
-                desc=caption,
-                source_description="从微博帖子的图片中",
-                provider=cfg.get("provider", "deepseek"),
-                model=cfg.get("model") or None,
-            )
-            if cleaned:
-                raw_ocr = cleaned
-
-        lines.append("## 原文\n")
-        lines.append(raw_ocr)
-        lines.append("")
-
-        return "\n".join(lines)
 
     def _parse_from_html(self, html: str, url: str) -> dict:
         """Fallback: parse Weibo HTML directly."""
