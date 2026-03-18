@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=42"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "webarticles-to-markdown"
+version = "0.1.0"
+description = "Convert WeChat, Weibo, Xiaohongshu, Twitter/X, Reddit articles to Markdown"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "httpx>=0.27",
+    "beautifulsoup4>=4.12",
+    "lxml>=5.0",
+    "markdownify>=0.12",
+    "ruamel.yaml>=0.18",
+    "python-dateutil>=2.9",
+]
+
+[project.optional-dependencies]
+wechat  = ["wechat-article-to-markdown"]
+twitter = ["xreach"]
+xhs     = ["playwright"]
+ocr     = ["easyocr"]
+ocr-lite = ["pytesseract", "pillow"]
+llm     = ["openai", "anthropic"]
+all     = [
+    "wechat-article-to-markdown",
+    "xreach",
+    "playwright",
+    "easyocr",
+    "openai",
+    "anthropic",
+]
+
+[project.scripts]
+webarticles = "converter.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["converter*"]

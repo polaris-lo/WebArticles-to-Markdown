@@ -11,39 +11,72 @@
 
 ## 安装
 
+### 方式一：pipx 安装（推荐，全局可用）
+
 ```bash
+pipx install git+https://github.com/SallyAlbarn/WebArticles-to-Markdown
+```
+
+安装后直接运行：
+
+```bash
+webarticles https://mp.weixin.qq.com/s/xxx
+webarticles --help
+```
+
+可选功能按需安装：
+
+```bash
+pipx inject webarticles-to-markdown wechat-article-to-markdown  # 微信公众号
+pipx inject webarticles-to-markdown xreach                      # Twitter/X
+pipx inject webarticles-to-markdown easyocr                     # 图片 OCR（中英文）
+pipx inject webarticles-to-markdown openai anthropic            # LLM 后处理
+```
+
+小红书需要额外安装浏览器：
+
+```bash
+pipx inject webarticles-to-markdown playwright
+pipx runpip webarticles-to-markdown install playwright
+python -m playwright install firefox
+```
+
+### 方式二：源码安装（开发 / 调试用）
+
+```bash
+git clone https://github.com/SallyAlbarn/WebArticles-to-Markdown
 cd WebArticles-to-Markdown
+pip3 install -e .                   # 安装核心依赖
+cp config.example.yaml config.yaml  # 按需修改配置
+webarticles <URL>                   # 或 python3 convert.py <URL>
+```
 
-# 核心依赖（必需）
-pip3 install -r requirements.txt
+可选功能：
 
-# 微信公众号（强烈推荐，使用 camoufox 反检测浏览器）
-pip3 install wechat-article-to-markdown
-
-# Twitter/X（专用抓取工具）
-pip3 install xreach
-
-# 小红书 Playwright 方案（可选增强）
-pip3 install playwright && playwright install firefox
+```bash
+pip3 install wechat-article-to-markdown   # 微信
+pip3 install xreach                        # Twitter/X
+pip3 install playwright && playwright install firefox  # 小红书
+pip3 install easyocr                       # OCR（首次运行下载约 1GB 模型）
 ```
 
 ## 快速开始
 
 ```bash
 # 微信公众号
-python3 convert.py https://mp.weixin.qq.com/s/YOUR_ARTICLE_ID
+webarticles https://mp.weixin.qq.com/s/YOUR_ARTICLE_ID
 
 # Reddit（需要 Cookie，或使用 --force-jina 兜底）
-python3 convert.py https://www.reddit.com/r/Python/comments/xyz/ --force-jina
+webarticles https://www.reddit.com/r/Python/comments/xyz/ --force-jina
 
 # 微博（无需登录）
-python3 convert.py https://weibo.com/status/POST_ID
+webarticles https://weibo.com/status/POST_ID
 
 # 预览内容（不写入文件）
-python3 convert.py https://mp.weixin.qq.com/s/xxx --dry-run
+webarticles https://mp.weixin.qq.com/s/xxx --dry-run
 
 # 指定输出目录
-python3 convert.py https://mp.weixin.qq.com/s/xxx -o ~/notes/clippings
+webarticles https://mp.weixin.qq.com/s/xxx -o ~/notes/clippings
 ```
 
 ## 平台支持详情
@@ -69,7 +102,7 @@ python3 convert.py https://mp.weixin.qq.com/s/xxx -o ~/notes/clippings
    **方式一：每次命令指定（临时）**
 
    ```bash
-   python3 convert.py https://www.xiaohongshu.com/explore/abc --cookies cookies/xiaohongshu.txt
+   webarticles https://www.xiaohongshu.com/explore/abc --cookies cookies/xiaohongshu.txt
    ```
 
    **方式二：写入 `config.yaml`（永久，推荐）**
@@ -83,7 +116,7 @@ python3 convert.py https://mp.weixin.qq.com/s/xxx -o ~/notes/clippings
    配置后直接运行即可，无需每次加 `--cookies` 参数：
 
    ```bash
-   python3 convert.py https://www.xiaohongshu.com/explore/abc
+   webarticles https://www.xiaohongshu.com/explore/abc
    ```
 
 ### Reddit
@@ -102,13 +135,13 @@ pip3 install xreach
 ### 指定 Cookie 文件
 
 ```bash
-python3 convert.py https://www.xiaohongshu.com/explore/abc --cookies cookies/xiaohongshu.txt
+webarticles https://www.xiaohongshu.com/explore/abc --cookies cookies/xiaohongshu.txt
 ```
 
 ## 完整参数
 
 ```text
-python3 convert.py <URL> [选项]
+webarticles <URL> [选项]
 
 选项:
   -o, --output DIR       输出目录（默认：./output 或 config.yaml 中设置）

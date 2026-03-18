@@ -45,7 +45,6 @@ def _load_cookies(config: dict, platform_name: str, cli_cookies: str | None) -> 
 
 def main():
     parser = argparse.ArgumentParser(
-        prog="convert",
         description="将网页文章转换为结构化 Markdown 文件",
     )
     parser.add_argument("url", help="要转换的文章 URL")
