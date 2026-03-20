@@ -335,12 +335,3 @@ SORT date DESC
 - Reddit 自 2023 年起严格限制 API 访问，无 Cookie 时建议使用 `--force-jina`
 - **小红书 + 本地代理（Clash/V2Ray 等）**：若运行时出现 `EOF occurred in violation of protocol` 或 Playwright 报 `NS_ERROR_NET_INTERRUPT`，通常是本地代理拦截了 TLS 握手。解决方法：在代理软件中将 `xiaohongshu.com` 加入直连规则（绕过代理），或临时关闭代理后再运行
 
----
-
-## About
-
-**WebArticles-to-Markdown** is a CLI tool that converts articles from Chinese social media and content platforms — WeChat, Weibo, Xiaohongshu (Little Red Book), Twitter/X, and Reddit — into structured Markdown files with YAML frontmatter, optimized for use with [Obsidian](https://obsidian.md).
-
-Beyond simple web clipping, it optionally uses an LLM (DeepSeek or Claude) to reformat content, generate Chinese summaries, extract reading-guide questions, and run structured analyses (critical reading and domain knowledge mapping) — turning raw captures into readable, searchable notes.
-
-Runs entirely locally. Designed for macOS, with Apple Shortcuts integration for one-tap saving from any app.
