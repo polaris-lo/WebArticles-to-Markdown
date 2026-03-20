@@ -1,5 +1,7 @@
 # WebArticles-to-Markdown
 
+[中文](#webarticles-to-markdown) | [English](#about)
+
 将微信公众号、小红书、微博、Twitter/X、Reddit 等平台的文章/内容转换为结构化 Markdown 文件，支持 YAML frontmatter，本地运行，适配 Obsidian。
 
 参考 [Agent-Reach](https://github.com/Panniantong/Agent-Reach) 的理念：**每个平台用最匹配的专用工具**。在此基础上扩展了以下能力：
@@ -227,7 +229,7 @@ platforms:
 
 ## LLM 后处理（可选）
 
-接入 DeepSeek 或 Claude，自动完成：重排版（分段、去广告、补标题）+ 生成中文摘要。
+接入 DeepSeek 或 Claude，自动完成：重排版（分段、去广告、补标题）+ 生成中文摘要 + 阅读辅助分析。
 
 ```bash
 # 设置 API Key（二选一）
@@ -241,6 +243,19 @@ export ANTHROPIC_API_KEY=sk-ant-...
 llm:
   enabled: true
   provider: deepseek    # deepseek | claude
+  skills:
+    critical_reading: true   # 批判性阅读五问法（适合观点类/讨论类文章）
+    domain_map: true         # 领域知识地图三问法
+```
+
+启用后，每篇文章的输出结构如下：
+
+```text
+## 摘要          ← LLM 生成的 3-5 句中文总结
+## 导读          ← 从文章核心观点提炼的 ≤5 个问题，帮助带着问题读文章
+（正文）
+## 批判性阅读（五问法）   ← 可选，分析逻辑边界、隐藏假设、适用范围等
+## 领域知识地图（三问法） ← 可选，梳理专家共识与核心分歧
 ```
 
 ## Apple Shortcuts 快捷指令（macOS）
@@ -290,6 +305,20 @@ echo "$OUTPUT" | grep "已保存:" | sed 's/.*已保存: //' | xargs basename
 
 在任意 App 点击分享 → 选择「保存文章为 MD」快捷指令，稍等片刻即可收到通知并自动跳转 Obsidian。
 
+## Obsidian 文件夹选择器（macOS）
+
+保存时弹出原生文件夹选择窗口，动态选择保存到 Obsidian Vault 的哪个子目录，无需每次修改配置。
+
+在 `config.yaml` 中启用：
+
+```yaml
+obsidian:
+  vault: "/Users/yourname/Documents/My Vault"   # Vault 根目录绝对路径
+  folder_picker: true                            # 保存前弹出选择窗口
+```
+
+启用后，每次运行时会弹出 macOS 原生文件夹选择对话框，默认定位到 Vault 根目录，选择后文件保存至所选子目录。如取消选择，则回退到 `output_dir` 配置。
+
 ## Obsidian Dataview 查询
 
 ```dataview
@@ -305,3 +334,13 @@ SORT date DESC
 - Jina Reader 为免费在线服务，内容会经过其服务器；介意隐私可加 `--no-jina`
 - Reddit 自 2023 年起严格限制 API 访问，无 Cookie 时建议使用 `--force-jina`
 - **小红书 + 本地代理（Clash/V2Ray 等）**：若运行时出现 `EOF occurred in violation of protocol` 或 Playwright 报 `NS_ERROR_NET_INTERRUPT`，通常是本地代理拦截了 TLS 握手。解决方法：在代理软件中将 `xiaohongshu.com` 加入直连规则（绕过代理），或临时关闭代理后再运行
+
+---
+
+## About
+
+**WebArticles-to-Markdown** is a CLI tool that converts articles from Chinese social media and content platforms — WeChat, Weibo, Xiaohongshu (Little Red Book), Twitter/X, and Reddit — into structured Markdown files with YAML frontmatter, optimized for use with [Obsidian](https://obsidian.md).
+
+Beyond simple web clipping, it optionally uses an LLM (DeepSeek or Claude) to reformat content, generate Chinese summaries, extract reading-guide questions, and run structured analyses (critical reading and domain knowledge mapping) — turning raw captures into readable, searchable notes.
+
+Runs entirely locally. Designed for macOS, with Apple Shortcuts integration for one-tap saving from any app.

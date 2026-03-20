@@ -95,11 +95,17 @@ Engine selected by `config.yaml → platforms.xiaohongshu.ocr.engine: auto|easyo
 
 ### LLM Post-Processing
 
-When `llm.enabled: true` in `config.yaml`, three optional passes run after extraction:
+When `llm.enabled: true` in `config.yaml`, the following passes run after extraction:
 
 1. **Restructure** — removes ads/QR code text, splits long paragraphs, adds section headers, converts lists to Markdown. Platform-specific prompts per source.
 2. **Summarize** — generates a 3–5 sentence Chinese summary. First sentence (≤100 chars) → frontmatter `description`; full summary → `## 摘要` body section.
 3. **OCR cleanup** — fixes garbled/repeated text from OCR, normalizes lists and formatting.
+4. **Reading guide** — extracts up to 5 questions from the article's own core ideas, placed after `## 摘要` as `## 导读` to help readers read with intent.
+5. **Skill analyses** (optional, configured via `llm.skills`):
+   - **Critical reading (五问法)** — Q1 logical boundary, Q2 hidden assumptions, Q3 applicability, Q4 debate positioning, Q5 missing voices. Q4/Q5 are omitted if not substantive.
+   - **Domain map (三问法)** — Q1 expert consensus (core mental models), Q2 fundamental disagreements. Appended after the article body.
+
+**Output order**: `## 摘要` → `## 导读` → article body → skill analysis sections.
 
 Providers: `deepseek` (default, `deepseek-chat`) or `claude` (`claude-haiku-4-5-20251001`). API keys via env vars or `~/.config/webarticles/deepseek_api_key`.
 
@@ -126,6 +132,13 @@ llm:
   enabled: false
   provider: deepseek      # deepseek | claude
   model: null             # null = use provider default
+  skills:
+    critical_reading: false  # 批判性阅读五问法 (good for opinion/discussion articles)
+    domain_map: false        # 领域知识地图三问法
+
+obsidian:
+  vault: ""               # absolute path to your Obsidian vault root
+  folder_picker: false    # show macOS native folder picker dialog on save
 
 platforms:
   xiaohongshu:
@@ -152,8 +165,9 @@ Cookie files use Netscape HTTP format and go in `cookies/` (git-ignored). CLI `-
 | `cookies.py` | Netscape cookie file → dict |
 | `date_parser.py` | Normalizes Chinese dates, Unix timestamps, fuzzy strings → ISO-8601 |
 | `slug.py` | Title → safe filename (max 60 chars, preserves CJK) |
-| `llm.py` | DeepSeek/Claude API calls and prompt construction |
+| `llm.py` | DeepSeek/Claude API calls, prompt construction, skill analyses (五问法/三问法), reading guide extraction |
 | `ocr.py` | Dispatches to easyocr or pytesseract |
+| `obsidian.py` | macOS native folder picker via osascript for Obsidian vault selection |
 | `tools.py` | CLI tool detection (`is_installed`) and subprocess execution |
 
 ## Adding a New Platform
