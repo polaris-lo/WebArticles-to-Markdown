@@ -7,7 +7,7 @@ Convert articles from WeChat, Weibo, Xiaohongshu (Little Red Book), Twitter/X, a
 Inspired by [Agent-Reach](https://github.com/Panniantong/Agent-Reach)'s philosophy of **using the best dedicated tool for each platform**. Extended with:
 
 - **Image OCR** — automatically extracts text from images in Xiaohongshu posts (Chinese + English, via easyocr or pytesseract)
-- **LLM post-processing** — optional DeepSeek / Claude integration for reformatting, ad removal, and Chinese summary generation
+- **LLM post-processing** — optional DeepSeek / Claude integration for reformatting, ad removal, Chinese summary generation, reading-guide extraction, and structured analyses (critical reading 五问法 and domain knowledge map 三问法)
 - **Apple Shortcuts friendly** — pure CLI, triggerable via the "Run Shell Script" action in Apple Shortcuts
 - **Multi-tier fallback** — each platform has backup strategies that kick in when scrapers hit paywalls or login walls
 
