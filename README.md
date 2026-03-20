@@ -1,6 +1,6 @@
 # WebArticles-to-Markdown
 
-[中文](#webarticles-to-markdown) | [English](#about)
+中文 | [English](README.en.md)
 
 将微信公众号、小红书、微博、Twitter/X、Reddit 等平台的文章/内容转换为结构化 Markdown 文件，支持 YAML frontmatter，本地运行，适配 Obsidian。
 
