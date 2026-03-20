@@ -158,6 +158,126 @@ def summarize_with_llm(
     return _call(prompt, provider=provider, model=model, api_key=api_key, base_url=base_url)
 
 
+def analyze_critical_reading_with_llm(
+    body_md: str,
+    *,
+    title: str = "",
+    provider: str = "deepseek",
+    model: str | None = None,
+    api_key: str | None = None,
+    base_url: str | None = None,
+) -> str | None:
+    """Run a batch critical-reading analysis (五问法) on the article body.
+
+    Adapts the interactive thinking-skills framework into a single non-interactive
+    LLM pass. Returns structured Markdown with Q1–Q5 sections, or ``None`` on failure.
+    """
+    title_line = f"【文章标题】{title}\n\n" if title else ""
+    prompt = (
+        "你是一位批判性思维分析师。请用中文对以下文章进行批判性阅读分析，依次回答五个问题。\n\n"
+        "写作要求：\n"
+        "- 表达简明易懂，避免学术腔；每条尽量一句话说清楚\n"
+        "- 宁缺毋滥：只写真正有力的论点，牵强或有抬杠嫌疑的直接跳过\n"
+        "- 每条观点尽量引用文章中的具体论点或例子作为依据，避免空泛断言\n\n"
+        "### Q1 逻辑边界\n"
+        "分两部分回答：\n"
+        "- **能推出的结论**：文章最有力地论证了什么？一两句话概括即可。\n"
+        "- **不能推出的结论**：先在脑中列举多个文章无法证明的方向，只写其中最有力的一个。"
+        "详细说明原因，可以从多个角度解释（例如：作者跨越了证据边界、把个案当普遍规律、"
+        "把相关性说成因果、前提条件不成立等），引用文章中的具体论断来佐证。\n\n"
+        "### Q2 隐藏假设\n"
+        "分三部分回答：\n"
+        "- **预设前提**：作者的逻辑暗中依赖哪些未经论证的前提？\n"
+        "- **忽略的关键变量**：有哪些重要因素被忽略了？\n"
+        "- **对结论的影响**：如果把这些变量纳入考虑，核心结论会如何改变？\n\n"
+        "### Q3 适用范围\n"
+        "分两部分回答：\n"
+        "- **失效情境**：在哪些具体场景下，文章的结论会不适用或效果打折？\n"
+        "- **边界条件**：这个方法/结论更适合哪类读者、项目或情境？\n\n"
+        "### Q4 论辩定位\n"
+        "只在文章涉及实质性争论时才写；如果文章是纯教程或操作指南，整个Q4可以省略。\n"
+        "分两部分回答：\n"
+        "- **回应的争论**：文章在反驳什么观点或现象？\n"
+        "- **对立观点的最有力反驳**：站在反对者角度，最有说服力的一个论点是什么？"
+        "然后说明作者的回应是否足够有力。\n\n"
+        "### Q5 缺失声音\n"
+        "只在缺失的视角会实质性影响结论时才写；如果影响不大，整个Q5可以省略。\n"
+        "分两部分回答：\n"
+        "- **缺失的视角**：哪个重要的相关方或角度完全没有出现？\n"
+        "- **对结论的影响**：这个视角的缺席如何让结论变得片面或不完整？\n\n"
+        "直接输出分析内容，保留以上标题格式，不要添加前言或总结。\n\n"
+        f"{title_line}"
+        "【文章正文】\n"
+        f"{body_md[:4000]}"
+    )
+    return _call(prompt, provider=provider, model=model, api_key=api_key, base_url=base_url)
+
+
+def analyze_domain_map_with_llm(
+    body_md: str,
+    *,
+    title: str = "",
+    provider: str = "deepseek",
+    model: str | None = None,
+    api_key: str | None = None,
+    base_url: str | None = None,
+) -> str | None:
+    """Run a batch domain-knowledge mapping analysis (三问法 Q1+Q2) on the article body.
+
+    Adapts the interactive thinking-skills framework into a single non-interactive
+    LLM pass. Returns structured Markdown with Q1–Q2 sections, or ``None`` on failure.
+    """
+    title_line = f"【文章标题】{title}\n\n" if title else ""
+    prompt = (
+        "你是一位领域知识分析师。请用中文梳理以下文章涉及的领域知识，"
+        "依次回答两个问题。\n\n"
+        "写作要求：\n"
+        "- 表达简明易懂，用普通读者能理解的说法，避免堆砌术语\n"
+        "- 每个要点尽量一句话说清楚核心意思，说不清楚的宁可不写\n"
+        "- 宁缺毋滥：不必强行凑足条数，只写真正能说清楚的要点\n\n"
+        "### Q1 专家共识\n"
+        "该领域所有专家共享的5个核心心智模型是什么？\n\n"
+        "### Q2 核心分歧\n"
+        "专家之间存在根本分歧的3个领域是什么？各方最有力的论点是什么？\n\n"
+        "直接输出分析内容，保留以上标题格式，不要添加前言或总结。\n\n"
+        f"{title_line}"
+        "【文章正文】\n"
+        f"{body_md[:4000]}"
+    )
+    return _call(prompt, provider=provider, model=model, api_key=api_key, base_url=base_url)
+
+
+def extract_reading_questions_with_llm(
+    body_md: str,
+    *,
+    title: str = "",
+    provider: str = "deepseek",
+    model: str | None = None,
+    api_key: str | None = None,
+    base_url: str | None = None,
+) -> str | None:
+    """Generate a reading guide based on the article's own core ideas.
+
+    Identifies the key concepts and knowledge points the author actually answers,
+    then turns them into questions for the reader to seek out while reading.
+    Returns a Markdown bullet list, or ``None`` on failure.
+    """
+    title_line = f"【文章标题】{title}\n\n" if title else ""
+    prompt = (
+        "请根据以下文章，提炼出作者在文中实际给出了答案的核心知识点或核心观点，"
+        "然后把它们变成问题，帮助读者带着问题去读文章、在文中找答案。\n\n"
+        "要求：\n"
+        "- 最多5个问题，只选最核心的，宁少勿多\n"
+        "- 每个问题控制在20字以内，简洁直接\n"
+        "- 问题必须是文章里有明确答案的，不要出开放性或文章没有回答的问题\n"
+        "- 直接输出问题列表（Markdown 无序列表格式），不要加标题、前言或说明\n\n"
+        f"{title_line}"
+        "【文章正文】\n"
+        f"{body_md[:3000]}"
+    )
+    return _call(prompt, provider=provider, model=model, api_key=api_key, base_url=base_url)
+
+
 # ---------------------------------------------------------------------------
 # Internal dispatch
 # ---------------------------------------------------------------------------

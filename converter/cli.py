@@ -97,7 +97,18 @@ def main():
         config.setdefault("images", {})["download"] = False
 
     # Determine output directory
-    output_dir = args.output or config.get("output_dir") or "output"
+    # Priority: --output CLI flag > Obsidian folder picker > config output_dir > ./output
+    if args.output:
+        output_dir = args.output
+    else:
+        obsidian_cfg = config.get("obsidian") or {}
+        chosen = None
+        if obsidian_cfg.get("folder_picker"):
+            vault = obsidian_cfg.get("vault", "")
+            if vault:
+                from converter.utils.obsidian import pick_folder
+                chosen = pick_folder(vault)
+        output_dir = chosen or config.get("output_dir") or "output"
     if not os.path.isabs(output_dir):
         output_dir = os.path.join(_PROJECT_ROOT, output_dir)
 
@@ -158,11 +169,59 @@ def main():
             # description = first sentence only (≤100 chars), for frontmatter
             first_sentence = re.split(r"(?<=[。！？.!?])\s*", llm_summary.strip())[0]
             extracted["summary"] = first_sentence[:100]
-            # Full summary goes into the body section
-            body_md = f"## 摘要\n\n{llm_summary}\n\n---\n\n{body_md}"
         else:
             logger.warning("LLM 摘要生成失败，frontmatter description 将为空")
             extracted["summary"] = ""
+            llm_summary = None
+
+        # Skill analyses — run on the clean article body, appended after it
+        skills_cfg = llm_cfg.get("skills") or {}
+        skill_sections = []
+        skill_kwargs = dict(
+            title=extracted.get("title", ""),
+            provider=llm_cfg.get("provider", "deepseek"),
+            model=llm_cfg.get("model") or None,
+        )
+
+        cr_result = None
+        dm_result = None
+
+        if skills_cfg.get("critical_reading"):
+            from converter.utils.llm import analyze_critical_reading_with_llm
+            logger.info("Running critical reading analysis (五问法)…")
+            cr_result = analyze_critical_reading_with_llm(body_md, **skill_kwargs)
+            if cr_result:
+                skill_sections.append(f"## 批判性阅读（五问法）\n\n{cr_result}")
+
+        if skills_cfg.get("domain_map"):
+            from converter.utils.llm import analyze_domain_map_with_llm
+            logger.info("Running domain map analysis (三问法)…")
+            dm_result = analyze_domain_map_with_llm(body_md, **skill_kwargs)
+            if dm_result:
+                skill_sections.append(f"## 领域知识地图（三问法）\n\n{dm_result}")
+
+        # Extract reading guide questions from the article body
+        reading_guide = None
+        from converter.utils.llm import extract_reading_questions_with_llm
+        logger.info("Extracting reading guide questions…")
+        reading_guide = extract_reading_questions_with_llm(
+            body_md,
+            title=extracted.get("title", ""),
+            provider=llm_cfg.get("provider", "deepseek"),
+            model=llm_cfg.get("model") or None,
+        )
+
+        # Assemble final body: 摘要 → 导读 → 原文 → Skill 分析
+        article_body = body_md
+        if skill_sections:
+            article_body = article_body + "\n\n---\n\n" + "\n\n---\n\n".join(skill_sections)
+
+        pre_body = ""
+        if llm_summary:
+            pre_body += f"## 摘要\n\n{llm_summary}\n\n---\n\n"
+        if reading_guide:
+            pre_body += f"## 导读\n\n{reading_guide}\n\n---\n\n"
+        body_md = pre_body + article_body
 
     fm_block = frontmatter.build(extracted)
 
