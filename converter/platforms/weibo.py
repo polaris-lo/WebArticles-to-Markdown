@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 class WeiboPlatform(BasePlatform):
     name = "weibo"
 
-    def extract(self, url: str, _config: dict, cookies: dict) -> dict:
+    def extract(self, url: str, config: dict, cookies: dict) -> dict:
         mobile_url = self._to_mobile_url(url)
         logger.debug("Weibo mobile URL: %s", mobile_url)
 
@@ -30,32 +30,25 @@ class WeiboPlatform(BasePlatform):
         except Exception as exc:
             raise ExtractionError(f"Weibo fetch failed: {exc}") from exc
 
-        # Try $render_data JSON extraction first
         post_data = self._extract_render_data(resp.text)
-
         if post_data:
             return self._parse_from_json(post_data, url)
 
-        # Fallback: parse HTML directly (less reliable)
         return self._parse_from_html(resp.text, url)
 
     def _to_mobile_url(self, url: str) -> str:
         """Convert desktop Weibo URL to mobile version."""
-        # Handle m.weibo.cn already
         if "m.weibo.cn" in url:
             return url
 
-        # weibo.com/USER/POST_ID → m.weibo.cn/detail/POST_ID
         m = re.search(r"weibo\.com/\w+/(\w+)", url)
         if m:
             return f"https://m.weibo.cn/detail/{m.group(1)}"
 
-        # weibo.com/status/POST_ID
         m = re.search(r"weibo\.com/status/(\w+)", url)
         if m:
             return f"https://m.weibo.cn/detail/{m.group(1)}"
 
-        # Already numeric ID format
         return url.replace("www.weibo.com", "m.weibo.cn").replace("weibo.com", "m.weibo.cn")
 
     def _extract_render_data(self, html: str) -> dict | None:
@@ -66,25 +59,21 @@ class WeiboPlatform(BasePlatform):
         try:
             start = html.index("[", idx)
             data, _ = json.JSONDecoder().raw_decode(html, start)
-            # Structure: [{status: {...}}, ...]
             if isinstance(data, list) and data:
                 return data[0].get("status") or data[0]
         except (json.JSONDecodeError, ValueError, KeyError):
             pass
         return None
 
-    def _parse_from_json(self, post: dict, url: str, config: dict | None = None) -> dict:
+    def _parse_from_json(self, post: dict, url: str) -> dict:
         """Parse weibo post from the $render_data JSON blob."""
         text_html = post.get("text", "")
         user = post.get("user") or {}
         author = user.get("screen_name", "")
-        date_raw = post.get("created_at", "")
-        date = parse_date(date_raw)
+        date = parse_date(post.get("created_at", ""))
 
-        # Extract hashtags from text
         tags = re.findall(r"#([^#]+)#", text_html)
 
-        # Retweeted post info
         extra = {}
         retweeted = post.get("retweeted_status")
         if retweeted:
@@ -93,14 +82,17 @@ class WeiboPlatform(BasePlatform):
             rt_text = retweeted.get("text", "")
             text_html += f'<hr/><blockquote><p><strong>转自 @{rt_user}：</strong></p>{rt_text}</blockquote>'
 
-        # Clean up Weibo-specific HTML tags like <a href="/n/...">@user</a>
+        # Append post images so the image downloader picks them up
+        for pic in post.get("pics") or []:
+            large = pic.get("large") or {}
+            img_url = large.get("url") or pic.get("url", "")
+            if img_url:
+                text_html += f'<img src="{img_url}"/>'
+
         soup = BeautifulSoup(text_html, "lxml")
-        # Replace <br> with newlines
         for br in soup.find_all("br"):
             br.replace_with("\n")
-
         plain_text = soup.get_text(separator="\n", strip=True)
-        summary = plain_text[:200]
 
         extra.update({
             "reposts_count": post.get("reposts_count"),
@@ -108,7 +100,7 @@ class WeiboPlatform(BasePlatform):
             "attitudes_count": post.get("attitudes_count"),
         })
 
-        base = {
+        return {
             "title": plain_text[:50] + ("..." if len(plain_text) > 50 else ""),
             "author": author,
             "date": date,
@@ -116,12 +108,10 @@ class WeiboPlatform(BasePlatform):
             "source_url": url,
             "tags": tags,
             "categories": [f"@{author}"] if author else [],
-            "summary": summary,
+            "summary": plain_text[:200],
             "extra": {k: v for k, v in extra.items() if v is not None},
             "body_html": text_html,
         }
-
-        return base
 
     def _parse_from_html(self, html: str, url: str) -> dict:
         """Fallback: parse Weibo HTML directly."""
