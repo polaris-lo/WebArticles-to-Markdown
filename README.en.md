@@ -7,7 +7,7 @@ Convert articles from WeChat, Weibo, Xiaohongshu (Little Red Book), Twitter/X, a
 Inspired by [Agent-Reach](https://github.com/Panniantong/Agent-Reach)'s philosophy of **using the best dedicated tool for each platform**. Extended with:
 
 - **Image OCR** — automatically extracts text from images in Xiaohongshu posts (Chinese + English, via easyocr or pytesseract)
-- **LLM post-processing** — optional DeepSeek / Claude integration for reformatting, ad removal, Chinese summary generation, reading-guide extraction, and structured analyses (critical reading 五问法 and domain knowledge map 三问法)
+- **LLM post-processing** — optional DeepSeek / Claude integration for reformatting, ad removal, and Chinese summary generation
 - **Apple Shortcuts friendly** — pure CLI, triggerable via the "Run Shell Script" action in Apple Shortcuts
 - **Multi-tier fallback** — each platform has backup strategies that kick in when scrapers hit paywalls or login walls
 
@@ -214,7 +214,7 @@ platforms:
 
 ## LLM Post-Processing (Optional)
 
-Connect DeepSeek or Claude to automatically reformat content, remove ads, generate summaries, and run reading analyses.
+Connect DeepSeek or Claude to automatically reformat content, remove ads, and generate a Chinese summary.
 
 ```bash
 # Set API key (one of)
@@ -228,37 +228,7 @@ Enable in `config.yaml`:
 llm:
   enabled: true
   provider: deepseek    # deepseek | claude
-  skills:
-    critical_reading: true   # Critical reading analysis — best for opinion/discussion articles
-    domain_map: true         # Domain knowledge map
 ```
-
-When enabled, each article's output is structured as:
-
-```text
-## 摘要 (Summary)       ← LLM-generated 3–5 sentence Chinese summary
-## 导读 (Reading Guide) ← Up to 5 questions based on the article's core ideas
-(Article body)
-## 批判性阅读（五问法）  ← Optional: logical boundaries, hidden assumptions, applicability, etc.
-## 领域知识地图（三问法）← Optional: expert consensus and core disagreements in the domain
-```
-
-### Critical Reading Analysis (五问法)
-
-Analyzes the article across five dimensions:
-
-- **Q1 Logical boundaries** — what the article can and cannot conclude; where the author oversteps the evidence
-- **Q2 Hidden assumptions** — unstated premises, ignored variables, and their impact on the conclusion
-- **Q3 Applicability** — scenarios where the argument breaks down, and what conditions it actually requires
-- **Q4 Debate positioning** — what position the article takes, and the strongest counterargument
-- **Q5 Missing voices** — perspectives absent from the article and how their absence affects the conclusion
-
-Q4 and Q5 are omitted when not substantive (e.g., pure tutorials).
-
-### Domain Knowledge Map (三问法)
-
-- **Q1 Expert consensus** — 5 core mental models shared across the field
-- **Q2 Core disagreements** — 3 areas of genuine debate among experts, with the strongest arguments on each side
 
 ## Apple Shortcuts (macOS)
 
@@ -343,6 +313,6 @@ SORT date DESC
 
 **WebArticles-to-Markdown** is a CLI tool that converts articles from Chinese social media and content platforms — WeChat, Weibo, Xiaohongshu (Little Red Book), Twitter/X, and Reddit — into structured Markdown files with YAML frontmatter, optimized for use with [Obsidian](https://obsidian.md).
 
-Beyond simple web clipping, it optionally uses an LLM (DeepSeek or Claude) to reformat content, generate Chinese summaries, extract reading-guide questions, and run structured analyses (critical reading and domain knowledge mapping) — turning raw captures into readable, searchable notes.
+Beyond simple web clipping, it optionally uses an LLM (DeepSeek or Claude) to reformat content and generate Chinese summaries — turning raw captures into readable, searchable notes.
 
 Runs entirely locally. Designed for macOS, with Apple Shortcuts integration for one-tap saving from any app.
